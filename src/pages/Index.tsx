@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import Header from '@/components/Header';
 import IGCard from '@/components/IGCard';
 import { Instagram, Shield, Zap, Users } from 'lucide-react';
@@ -19,6 +20,7 @@ interface IGAccount {
 
 export default function Index() {
   const { user, profile } = useAuth();
+  const { t } = useLanguage();
   const [accounts, setAccounts] = useState<IGAccount[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -66,37 +68,36 @@ export default function Index() {
           <div className="text-center max-w-4xl mx-auto animate-fade-up">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8">
               <Instagram className="w-4 h-4 text-primary" />
-              <span className="text-sm text-primary font-medium">Premium IG Marketplace</span>
+              <span className="text-sm text-primary font-medium">{t('premiumIgMarketplace')}</span>
             </div>
             <h1 className="text-5xl md:text-7xl font-display font-bold mb-6">
-              <span className="text-foreground">Buy & Sell</span>
+              <span className="text-foreground">{t('buyAndSell')}</span>
               <br />
-              <span className="text-gradient-gold">Instagram Accounts</span>
+              <span className="text-gradient-gold">{t('instagramAccounts')}</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-              The most trusted platform for trading verified Instagram accounts. 
-              Secure transactions, verified sellers, and guaranteed delivery.
+              {t('heroDescription')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {!user ? (
                 <Link to="/auth" className="btn-gold text-lg">
-                  Start Trading Now
+                  {t('startTradingNow')}
                 </Link>
               ) : !profile?.role ? (
                 <Link to="/role-select" className="btn-gold text-lg">
-                  Choose Your Role
+                  {t('chooseYourRole')}
                 </Link>
               ) : profile.role === 'seller' ? (
                 <Link to="/seller" className="btn-gold text-lg">
-                  Seller Dashboard
+                  {t('sellerDashboard')}
                 </Link>
               ) : profile.role === 'buyer' ? (
                 <Link to="/buyer" className="btn-gold text-lg">
-                  Buyer Dashboard
+                  {t('buyerDashboard')}
                 </Link>
               ) : profile.role === 'admin' ? (
                 <Link to="/admin" className="btn-gold text-lg">
-                  Admin Panel
+                  {t('adminPanel')}
                 </Link>
               ) : null}
             </div>
@@ -112,27 +113,27 @@ export default function Index() {
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
                 <Shield className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Secure Escrow</h3>
+              <h3 className="text-xl font-semibold mb-3">{t('secureEscrow')}</h3>
               <p className="text-muted-foreground">
-                Your payment is held safely until the transaction is verified and completed.
+                {t('secureEscrowDesc')}
               </p>
             </div>
             <div className="glass-card rounded-2xl p-8 animate-fade-up stagger-2 opacity-0">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
                 <Zap className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Fast Verification</h3>
+              <h3 className="text-xl font-semibold mb-3">{t('fastVerification')}</h3>
               <p className="text-muted-foreground">
-                Admin verification within 24 hours. Quick and hassle-free process.
+                {t('fastVerificationDesc')}
               </p>
             </div>
             <div className="glass-card rounded-2xl p-8 animate-fade-up stagger-3 opacity-0">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
                 <Users className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Verified Accounts</h3>
+              <h3 className="text-xl font-semibold mb-3">{t('verifiedAccounts')}</h3>
               <p className="text-muted-foreground">
-                All accounts are verified with real follower data updated daily.
+                {t('verifiedAccountsDesc')}
               </p>
             </div>
           </div>
@@ -144,8 +145,8 @@ export default function Index() {
         <div className="container mx-auto">
           <div className="flex items-center justify-between mb-10">
             <div>
-              <h2 className="text-3xl font-display font-bold mb-2">Available Accounts</h2>
-              <p className="text-muted-foreground">Browse verified Instagram accounts for sale</p>
+              <h2 className="text-3xl font-display font-bold mb-2">{t('availableAccounts')}</h2>
+              <p className="text-muted-foreground">{t('browseVerifiedAccounts')}</p>
             </div>
           </div>
 
@@ -167,11 +168,11 @@ export default function Index() {
           ) : accounts.length === 0 ? (
             <div className="glass-card rounded-2xl p-12 text-center">
               <Instagram className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No Accounts Listed Yet</h3>
-              <p className="text-muted-foreground mb-6">Be the first to list your account on our platform.</p>
+              <h3 className="text-xl font-semibold mb-2">{t('noAccountsListedYet')}</h3>
+              <p className="text-muted-foreground mb-6">{t('beFirstToList')}</p>
               {!user && (
                 <Link to="/auth" className="btn-gold">
-                  Get Started
+                  {t('getStarted')}
                 </Link>
               )}
             </div>
