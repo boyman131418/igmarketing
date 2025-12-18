@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getProxiedImageUrl } from '@/lib/imageProxy';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -201,7 +202,7 @@ export default function AccountDetail() {
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-gold-dark p-[3px] gold-glow">
                 <div className="w-full h-full rounded-full bg-card overflow-hidden">
                   {account.ig_avatar_url ? (
-                    <img src={account.ig_avatar_url} alt={account.ig_username} className="w-full h-full object-cover" />
+                    <img src={getProxiedImageUrl(account.ig_avatar_url) || ''} alt={account.ig_username} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-muted">
                       <span className="text-4xl font-bold text-muted-foreground">
@@ -316,7 +317,7 @@ export default function AccountDetail() {
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-gold-dark p-[2px]">
                 <div className="w-full h-full rounded-full bg-card overflow-hidden flex items-center justify-center">
                   {account.ig_avatar_url ? (
-                    <img src={account.ig_avatar_url} alt="" className="w-full h-full object-cover" />
+                    <img src={getProxiedImageUrl(account.ig_avatar_url) || ''} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-lg font-bold text-muted-foreground">
                       {account.ig_username[0]?.toUpperCase()}
