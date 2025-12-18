@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Users, Mail } from 'lucide-react';
 import { getProxiedImageUrl } from '@/lib/imageProxy';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface IGCardProps {
   id: string;
@@ -21,6 +22,8 @@ export default function IGCard({
   maskedEmail,
   index = 0,
 }: IGCardProps) {
+  const { t } = useLanguage();
+  
   const formatFollowers = (count: number) => {
     if (count >= 1000000) {
       return `${(count / 1000000).toFixed(1)}M`;
@@ -63,7 +66,7 @@ export default function IGCard({
           <h3 className="font-semibold text-lg truncate">@{username}</h3>
           <div className="flex items-center gap-1 text-muted-foreground text-sm mt-1">
             <Users className="w-4 h-4" />
-            <span>{formatFollowers(followerCount)} followers</span>
+            <span>{formatFollowers(followerCount)} {t('followers')}</span>
           </div>
           <div className="flex items-center gap-1 text-muted-foreground text-sm mt-1">
             <Mail className="w-4 h-4" />
@@ -73,7 +76,7 @@ export default function IGCard({
       </div>
 
       <div className="mt-6 pt-4 border-t border-border/50 flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">Price</span>
+        <span className="text-sm text-muted-foreground">{t('price')}</span>
         <span className="text-2xl font-display font-bold text-primary">
           HKD {price.toLocaleString()}
         </span>

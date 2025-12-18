@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +13,7 @@ type AuthMode = 'login' | 'signup' | 'forgot';
 
 export default function Auth() {
   const { user, profile, loading, signIn, signUp } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
@@ -39,7 +41,7 @@ export default function Auth() {
     
     if (mode === 'forgot') {
       if (!email) {
-        toast.error('請填寫電郵');
+        toast.error(t('pleaseEnterEmail'));
         return;
       }
       setIsSubmitting(true);
@@ -50,11 +52,11 @@ export default function Auth() {
         if (error) {
           toast.error(error.message);
         } else {
-          toast.success('重設密碼郵件已發送，請查看你的電郵');
+          toast.success(t('resetEmailSent'));
           setMode('login');
         }
       } catch (err) {
-        toast.error('發生錯誤，請稍後再試');
+        toast.error(t('errorOccurred'));
       } finally {
         setIsSubmitting(false);
       }
@@ -62,7 +64,7 @@ export default function Auth() {
     }
 
     if (!email || !password) {
-      toast.error('請填寫電郵和密碼');
+      toast.error(t('pleaseEnterEmailAndPassword'));
       return;
     }
     
@@ -72,7 +74,7 @@ export default function Auth() {
         const { error } = await signIn(email, password);
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
-            toast.error('電郵或密碼錯誤');
+            toast.error(t('wrongCredentials'));
           } else {
             toast.error(error.message);
           }
@@ -81,16 +83,16 @@ export default function Auth() {
         const { error } = await signUp(email, password);
         if (error) {
           if (error.message.includes('already registered')) {
-            toast.error('此電郵已註冊，請登入');
+            toast.error(t('emailAlreadyRegistered'));
           } else {
             toast.error(error.message);
           }
         } else {
-          toast.success('註冊成功！');
+          toast.success(t('signupSuccess'));
         }
       }
     } catch (err) {
-      toast.error('發生錯誤，請稍後再試');
+      toast.error(t('errorOccurred'));
     } finally {
       setIsSubmitting(false);
     }
@@ -106,17 +108,17 @@ export default function Auth() {
 
   const getTitle = () => {
     switch (mode) {
-      case 'login': return '登入 IG Market';
-      case 'signup': return '註冊 IG Market';
-      case 'forgot': return '重設密碼';
+      case 'login': return t('loginTitle');
+      case 'signup': return t('signupTitle');
+      case 'forgot': return t('resetPasswordTitle');
     }
   };
 
   const getSubtitle = () => {
     switch (mode) {
-      case 'login': return '登入以開始買賣 Instagram 帳號';
-      case 'signup': return '建立帳號以開始買賣 Instagram 帳號';
-      case 'forgot': return '輸入你的電郵，我們會發送重設密碼連結';
+      case 'login': return t('loginSubtitle');
+      case 'signup': return t('signupSubtitle');
+      case 'forgot': return t('resetPasswordSubtitle');
     }
   };
 
@@ -132,7 +134,7 @@ export default function Auth() {
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            返回登入
+            {t('backToLogin')}
           </button>
         )}
 
@@ -146,7 +148,7 @@ export default function Auth() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">電郵</Label>
+            <Label htmlFor="email">{t('emailLabel')}</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
@@ -162,7 +164,7 @@ export default function Auth() {
           
           {mode !== 'forgot' && (
             <div className="space-y-2">
-              <Label htmlFor="password">密碼</Label>
+              <Label htmlFor="password">{t('passwordLabel')}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
@@ -184,7 +186,7 @@ export default function Auth() {
                 onClick={() => setMode('forgot')}
                 className="text-sm text-primary hover:underline"
               >
-                忘記密碼？
+                {t('forgotPassword')}
               </button>
             </div>
           )}
@@ -196,7 +198,7 @@ export default function Auth() {
           >
             {isSubmitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />
-            ) : mode === 'forgot' ? '發送重設連結' : mode === 'login' ? '登入' : '註冊'}
+            ) : mode === 'forgot' ? t('sendResetLink') : mode === 'login' ? t('login') : t('signup')}
           </Button>
         </form>
 
@@ -207,13 +209,13 @@ export default function Auth() {
               onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
               className="text-primary hover:underline"
             >
-              {mode === 'login' ? '還沒有帳號？立即註冊' : '已有帳號？立即登入'}
+              {mode === 'login' ? t('noAccountYet') : t('alreadyHaveAccount')}
             </button>
           </div>
         )}
 
         <p className="text-center text-sm text-muted-foreground mt-8">
-          登入即表示你同意我們的服務條款和私隱政策
+          {t('termsAgreement')}
         </p>
       </div>
     </div>

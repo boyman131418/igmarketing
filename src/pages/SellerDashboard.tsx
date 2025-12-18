@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getProxiedImageUrl } from '@/lib/imageProxy';
 import Header from '@/components/Header';
@@ -37,6 +38,7 @@ interface IGAccount {
 
 export default function SellerDashboard() {
   const { user, profile, loading } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [accounts, setAccounts] = useState<IGAccount[]>([]);
@@ -133,10 +135,9 @@ export default function SellerDashboard() {
     e.preventDefault();
     setFormLoading(true);
 
-    // First, fetch IG data
     toast({
-      title: '正在讀取 Instagram 資料...',
-      description: `正在獲取 @${formData.ig_username} 的頭像和粉絲數`,
+      title: t('fetchingIgData'),
+      description: `${t('fetchingIgDataDesc')} @${formData.ig_username}`,
     });
 
     const igData = await fetchIGData(formData.ig_username);
@@ -179,8 +180,8 @@ export default function SellerDashboard() {
       });
     } else {
       toast({
-        title: editingAccount ? '帳號已更新' : '帳號已新增',
-        description: `@${formData.ig_username} 已成功${editingAccount ? '更新' : '新增'}。粉絲數：${igData.followerCount.toLocaleString()}`,
+        title: editingAccount ? t('accountUpdated') : t('accountAdded'),
+        description: `@${formData.ig_username} ${t('accountSuccess')}. ${t('followers')}: ${igData.followerCount.toLocaleString()}`,
       });
       resetForm();
       setIsDialogOpen(false);
@@ -190,15 +191,15 @@ export default function SellerDashboard() {
 
   const syncAccount = async (account: IGAccount) => {
     toast({
-      title: '正在同步...',
-      description: `正在更新 @${account.ig_username} 的資料`,
+      title: t('syncing'),
+      description: `${t('syncingDesc')} @${account.ig_username}`,
     });
 
     const igData = await fetchIGData(account.ig_username, account.id);
 
     toast({
-      title: '同步完成',
-      description: `@${account.ig_username} - 粉絲數：${igData.followerCount.toLocaleString()}`,
+      title: t('syncComplete'),
+      description: `@${account.ig_username} - ${t('followers')}: ${igData.followerCount.toLocaleString()}`,
     });
 
     fetchAccounts();
@@ -218,15 +219,15 @@ export default function SellerDashboard() {
       });
     } else {
       toast({
-        title: account.is_published ? 'Unpublished' : 'Published',
-        description: `@${account.ig_username} is now ${account.is_published ? 'hidden' : 'visible'} on the marketplace.`,
+        title: account.is_published ? t('unpublished') : t('publishedMsg'),
+        description: `@${account.ig_username} ${account.is_published ? t('nowHidden') : t('nowVisible')}`,
       });
       fetchAccounts();
     }
   };
 
   const deleteAccount = async (account: IGAccount) => {
-    if (!confirm('Are you sure you want to delete this account?')) return;
+    if (!confirm(t('confirmDelete'))) return;
 
     const { error } = await supabase
       .from('ig_accounts')
@@ -241,8 +242,8 @@ export default function SellerDashboard() {
       });
     } else {
       toast({
-        title: 'Deleted',
-        description: `@${account.ig_username} has been removed.`,
+        title: t('deleted'),
+        description: `@${account.ig_username} ${t('hasBeenRemoved')}`,
       });
       fetchAccounts();
     }
@@ -279,27 +280,27 @@ export default function SellerDashboard() {
       <main className="container mx-auto px-4 pt-24 pb-12">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-display font-bold mb-2">Seller Dashboard</h1>
-            <p className="text-muted-foreground">Manage your Instagram accounts for sale</p>
+            <h1 className="text-3xl font-display font-bold mb-2">{t('sellerDashboard')}</h1>
+            <p className="text-muted-foreground">{t('manageYourAccounts')}</p>
           </div>
           
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button className="btn-gold">
                 <Plus className="w-4 h-4 mr-2" />
-                Add Account
+                {t('addAccount')}
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="font-display text-2xl">
-                  {editingAccount ? 'Edit Account' : 'Add New Account'}
+                  {editingAccount ? t('editAccount') : t('addNewAccount')}
                 </DialogTitle>
               </DialogHeader>
               
               <form onSubmit={handleSubmit} className="space-y-6 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="ig_username">Instagram Username</Label>
+                  <Label htmlFor="ig_username">{t('igUsername')}</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
                     <Input
@@ -315,7 +316,7 @@ export default function SellerDashboard() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="contact_phone">Contact Phone</Label>
+                    <Label htmlFor="contact_phone">{t('contactPhone')}</Label>
                     <Input
                       id="contact_phone"
                       value={formData.contact_phone}
@@ -325,7 +326,7 @@ export default function SellerDashboard() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="contact_email">Contact Email</Label>
+                    <Label htmlFor="contact_email">{t('contactEmail')}</Label>
                     <Input
                       id="contact_email"
                       type="email"
@@ -338,19 +339,19 @@ export default function SellerDashboard() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="payment_details">Payment Details (Bank/FPS/Payme)</Label>
+                  <Label htmlFor="payment_details">{t('paymentDetails')}</Label>
                   <Textarea
                     id="payment_details"
                     value={formData.payment_details}
                     onChange={(e) => setFormData({ ...formData, payment_details: e.target.value })}
-                    placeholder="Enter your payment receiving details..."
+                    placeholder={t('paymentDetailsPlaceholder')}
                     className="input-dark resize-none"
                     rows={3}
                   />
                 </div>
 
                 <div className="space-y-4">
-                  <Label>Pricing Method</Label>
+                  <Label>{t('pricingMethod')}</Label>
                   <RadioGroup
                     value={formData.pricing_type}
                     onValueChange={(value) => setFormData({ ...formData, pricing_type: value })}
@@ -358,18 +359,18 @@ export default function SellerDashboard() {
                   >
                     <div className={`flex items-center space-x-3 p-4 rounded-xl border ${formData.pricing_type === 'fixed' ? 'border-primary bg-primary/5' : 'border-border'}`}>
                       <RadioGroupItem value="fixed" id="fixed" />
-                      <Label htmlFor="fixed" className="cursor-pointer">Fixed Price</Label>
+                      <Label htmlFor="fixed" className="cursor-pointer">{t('fixedPrice')}</Label>
                     </div>
                     <div className={`flex items-center space-x-3 p-4 rounded-xl border ${formData.pricing_type === 'percentage' ? 'border-primary bg-primary/5' : 'border-border'}`}>
                       <RadioGroupItem value="percentage" id="percentage" />
-                      <Label htmlFor="percentage" className="cursor-pointer">% of Followers</Label>
+                      <Label htmlFor="percentage" className="cursor-pointer">{t('percentageOfFollowers')}</Label>
                     </div>
                   </RadioGroup>
                 </div>
 
                 {formData.pricing_type === 'fixed' ? (
                   <div className="space-y-2">
-                    <Label htmlFor="fixed_price">Price (HKD)</Label>
+                    <Label htmlFor="fixed_price">{t('priceHKD')}</Label>
                     <Input
                       id="fixed_price"
                       type="number"
@@ -382,7 +383,7 @@ export default function SellerDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <Label htmlFor="percentage_rate">Percentage Rate (%)</Label>
+                    <Label htmlFor="percentage_rate">{t('percentageRate')}</Label>
                     <Input
                       id="percentage_rate"
                       type="number"
@@ -394,7 +395,7 @@ export default function SellerDashboard() {
                       max="100"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Price = Follower Count × (Percentage / 100)
+                      {t('percentageFormula')}
                     </p>
                   </div>
                 )}
@@ -403,7 +404,7 @@ export default function SellerDashboard() {
                   {formLoading ? (
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                   ) : null}
-                  {editingAccount ? 'Update Account' : 'Add Account'}
+                  {editingAccount ? t('updateAccount') : t('addAccount')}
                 </Button>
               </form>
             </DialogContent>
@@ -413,8 +414,8 @@ export default function SellerDashboard() {
         {accounts.length === 0 ? (
           <div className="glass-card rounded-2xl p-12 text-center">
             <Instagram className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No Accounts Yet</h3>
-            <p className="text-muted-foreground mb-6">Add your first Instagram account to start selling.</p>
+            <h3 className="text-xl font-semibold mb-2">{t('noAccountsYet')}</h3>
+            <p className="text-muted-foreground mb-6">{t('addFirstAccount')}</p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -452,7 +453,7 @@ export default function SellerDashboard() {
                 <div className="flex items-center justify-between py-3 border-t border-border/50">
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <DollarSign className="w-4 h-4" />
-                    <span className="text-sm">Price</span>
+                    <span className="text-sm">{t('price')}</span>
                   </div>
                   <span className="text-xl font-display font-bold text-primary">
                     HKD {calculatePrice(account).toLocaleString()}
@@ -464,7 +465,7 @@ export default function SellerDashboard() {
                     variant="outline"
                     size="sm"
                     onClick={() => syncAccount(account)}
-                    title="同步 IG 資料"
+                    title={t('syncIgData')}
                   >
                     <RefreshCw className="w-4 h-4" />
                   </Button>
@@ -475,7 +476,7 @@ export default function SellerDashboard() {
                     onClick={() => openEditDialog(account)}
                   >
                     <Edit2 className="w-4 h-4 mr-2" />
-                    Edit
+                    {t('editAccount')}
                   </Button>
                   <Button
                     variant="outline"
@@ -488,7 +489,7 @@ export default function SellerDashboard() {
                 </div>
 
                 <p className={`text-xs mt-3 text-center ${account.is_published ? 'text-green-400' : 'text-muted-foreground'}`}>
-                  {account.is_published ? '● Listed on marketplace' : '○ Not listed'}
+                  {account.is_published ? `● ${t('published')}` : `○ ${t('draft')}`}
                 </p>
               </div>
             ))}
