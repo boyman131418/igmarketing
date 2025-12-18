@@ -2,3 +2,6 @@ project_id = "czkeewhgomgpivciwkcm"
 
 [functions.proxy-image]
 verify_jwt = false
+
+[functions.sync-all-ig-accounts]
+verify_jwt = false
