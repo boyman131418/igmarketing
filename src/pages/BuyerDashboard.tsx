@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { getProxiedImageUrl } from '@/lib/imageProxy';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -156,17 +157,17 @@ export default function BuyerDashboard() {
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
       case 'pending_payment':
-        return <span className="badge-pending">Pending Payment</span>;
+        return <span className="badge-pending">待付款</span>;
       case 'awaiting_confirmation':
-        return <span className="badge-pending">Awaiting Confirmation</span>;
+        return <span className="badge-pending">待確認</span>;
       case 'payment_confirmed':
-        return <span className="badge-confirmed">Payment Confirmed</span>;
+        return <span className="badge-confirmed">已確認付款</span>;
       case 'completed':
-        return <span className="badge-completed">Completed</span>;
+        return <span className="badge-completed">已完成</span>;
       case 'refunded':
-        return <span className="badge-refunded">Refunded</span>;
+        return <span className="badge-refunded">已退款</span>;
       case 'cancelled':
-        return <span className="badge-refunded">Cancelled</span>;
+        return <span className="badge-refunded">已取消</span>;
       default:
         return null;
     }
@@ -276,7 +277,7 @@ export default function BuyerDashboard() {
                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-gold-dark p-[2px]">
                       <div className="w-full h-full rounded-full bg-card overflow-hidden flex items-center justify-center">
                         {order.ig_accounts?.ig_avatar_url ? (
-                          <img src={order.ig_accounts.ig_avatar_url} alt="" className="w-full h-full object-cover" />
+                          <img src={getProxiedImageUrl(order.ig_accounts.ig_avatar_url) || ''} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <span className="text-xl font-bold text-muted-foreground">
                             {order.ig_accounts?.ig_username?.[0]?.toUpperCase() || '?'}
@@ -303,11 +304,11 @@ export default function BuyerDashboard() {
                   <div className="flex items-center gap-2">
                     {getStatusIcon(order.status)}
                     <span className="text-sm text-muted-foreground">
-                      {order.status === 'pending_payment' && 'Please complete payment'}
-                      {order.status === 'awaiting_confirmation' && 'Waiting for admin confirmation'}
-                      {order.status === 'payment_confirmed' && 'Contact seller to complete transfer'}
-                      {order.status === 'completed' && 'Transaction completed'}
-                      {order.status === 'refunded' && 'Payment has been refunded'}
+                      {order.status === 'pending_payment' && '請完成付款'}
+                      {order.status === 'awaiting_confirmation' && '等待管理員確認付款'}
+                      {order.status === 'payment_confirmed' && '付款已確認，可查看賣家聯絡資料'}
+                      {order.status === 'completed' && '交易已完成'}
+                      {order.status === 'refunded' && '已退款'}
                     </span>
                   </div>
                   
@@ -316,7 +317,7 @@ export default function BuyerDashboard() {
                       onClick={() => setSelectedOrder(order)}
                       className="btn-gold"
                     >
-                      View Payment Info
+                      查看付款資料
                     </Button>
                   )}
                   
@@ -328,7 +329,7 @@ export default function BuyerDashboard() {
                       }}
                       className="btn-gold"
                     >
-                      View Seller Contact
+                      查看賣家聯絡資料
                     </Button>
                   )}
                 </div>
