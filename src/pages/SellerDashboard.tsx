@@ -107,9 +107,38 @@ export default function SellerDashboard() {
     setIsDialogOpen(true);
   };
 
+  const fetchIGData = async (username: string, accountId?: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-ig-data', {
+        body: { username, accountId },
+      });
+
+      if (error) {
+        console.error('Error fetching IG data:', error);
+        return { followerCount: 0, avatarUrl: null };
+      }
+
+      return {
+        followerCount: data?.followerCount || 0,
+        avatarUrl: data?.avatarUrl || null,
+      };
+    } catch (err) {
+      console.error('Error invoking fetch-ig-data:', err);
+      return { followerCount: 0, avatarUrl: null };
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormLoading(true);
+
+    // First, fetch IG data
+    toast({
+      title: '正在讀取 Instagram 資料...',
+      description: `正在獲取 @${formData.ig_username} 的頭像和粉絲數`,
+    });
+
+    const igData = await fetchIGData(formData.ig_username);
 
     const accountData = {
       seller_id: user?.id,
@@ -120,6 +149,9 @@ export default function SellerDashboard() {
       pricing_type: formData.pricing_type,
       fixed_price: formData.pricing_type === 'fixed' ? parseFloat(formData.fixed_price) || null : null,
       percentage_rate: formData.pricing_type === 'percentage' ? parseFloat(formData.percentage_rate) || null : null,
+      follower_count: igData.followerCount,
+      ig_avatar_url: igData.avatarUrl,
+      last_synced_at: new Date().toISOString(),
     };
 
     let error;
@@ -146,13 +178,29 @@ export default function SellerDashboard() {
       });
     } else {
       toast({
-        title: editingAccount ? 'Account Updated' : 'Account Added',
-        description: `@${formData.ig_username} has been ${editingAccount ? 'updated' : 'added'} successfully.`,
+        title: editingAccount ? '帳號已更新' : '帳號已新增',
+        description: `@${formData.ig_username} 已成功${editingAccount ? '更新' : '新增'}。粉絲數：${igData.followerCount.toLocaleString()}`,
       });
       resetForm();
       setIsDialogOpen(false);
       fetchAccounts();
     }
+  };
+
+  const syncAccount = async (account: IGAccount) => {
+    toast({
+      title: '正在同步...',
+      description: `正在更新 @${account.ig_username} 的資料`,
+    });
+
+    const igData = await fetchIGData(account.ig_username, account.id);
+
+    toast({
+      title: '同步完成',
+      description: `@${account.ig_username} - 粉絲數：${igData.followerCount.toLocaleString()}`,
+    });
+
+    fetchAccounts();
   };
 
   const togglePublish = async (account: IGAccount) => {
@@ -411,6 +459,14 @@ export default function SellerDashboard() {
                 </div>
 
                 <div className="flex items-center gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => syncAccount(account)}
+                    title="同步 IG 資料"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
