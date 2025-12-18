@@ -19,8 +19,9 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  updateRole: (role: 'buyer' | 'seller') => Promise<void>;
+  updateRole: (role: 'buyer' | 'seller' | 'admin') => Promise<void>;
   refreshProfile: () => Promise<void>;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -103,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   };
 
-  const updateRole = async (role: 'buyer' | 'seller') => {
+  const updateRole = async (role: 'buyer' | 'seller' | 'admin') => {
     if (!user) return;
     
     const { error } = await supabase
@@ -116,6 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const isAdmin = profile?.email === 'boyman131418@gmail.com' || profile?.role === 'admin';
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -127,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       updateRole,
       refreshProfile,
+      isAdmin,
     }}>
       {children}
     </AuthContext.Provider>

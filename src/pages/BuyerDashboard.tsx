@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getProxiedImageUrl } from '@/lib/imageProxy';
 import Header from '@/components/Header';
@@ -39,8 +40,15 @@ interface Order {
   } | null;
 }
 
+interface PlatformSettings {
+  fpsNumber: string;
+  paymentEmail: string;
+  paymentMethods: string;
+}
+
 export default function BuyerDashboard() {
   const { user, profile, loading } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -48,6 +56,11 @@ export default function BuyerDashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showSellerInfo, setShowSellerInfo] = useState(false);
   const [confirmingCompletion, setConfirmingCompletion] = useState(false);
+  const [platformSettings, setPlatformSettings] = useState<PlatformSettings>({
+    fpsNumber: '',
+    paymentEmail: '',
+    paymentMethods: '',
+  });
 
   const [contactInfo, setContactInfo] = useState({
     phone: profile?.phone || '',
@@ -66,6 +79,7 @@ export default function BuyerDashboard() {
   useEffect(() => {
     if (user) {
       fetchOrders();
+      fetchPlatformSettings();
     }
   }, [user]);
 
@@ -77,6 +91,24 @@ export default function BuyerDashboard() {
       });
     }
   }, [profile]);
+
+  const fetchPlatformSettings = async () => {
+    const { data } = await supabase
+      .from('platform_settings')
+      .select('key, value');
+    
+    if (data) {
+      const settings: Record<string, string> = {};
+      data.forEach(item => {
+        settings[item.key] = item.value || '';
+      });
+      setPlatformSettings({
+        fpsNumber: settings['payment_fps_number'] || '87925469',
+        paymentEmail: settings['payment_email'] || 'boyman131418@gmail.com',
+        paymentMethods: settings['payment_methods'] || 'FPS, PayMe',
+      });
+    }
+  };
 
   const fetchOrders = async () => {
     setFetchLoading(true);
@@ -103,25 +135,16 @@ export default function BuyerDashboard() {
 
   const updateContactInfo = async () => {
     if (!user) return;
-
+    
     const { error } = await supabase
       .from('profiles')
-      .update({
-        phone: contactInfo.phone,
-        email: contactInfo.email,
-      })
+      .update({ phone: contactInfo.phone, email: contactInfo.email })
       .eq('id', user.id);
 
-    if (error) {
+    if (!error) {
       toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Updated',
-        description: 'Contact information saved.',
+        title: 'Contact Updated',
+        description: 'Your contact information has been saved.',
       });
     }
   };
@@ -136,20 +159,14 @@ export default function BuyerDashboard() {
       })
       .eq('id', order.id);
 
-    if (error) {
+    if (!error) {
       toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Transaction Completed',
-        description: 'Thank you! The seller will receive payment shortly.',
+        title: t('orderCompleted'),
+        description: t('transactionCompleted'),
       });
       fetchOrders();
-      setSelectedOrder(null);
       setShowSellerInfo(false);
+      setSelectedOrder(null);
     }
     setConfirmingCompletion(false);
   };
@@ -157,17 +174,17 @@ export default function BuyerDashboard() {
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
       case 'pending_payment':
-        return <span className="badge-pending">待付款</span>;
+        return <span className="badge-pending">{t('pendingPayment')}</span>;
       case 'awaiting_confirmation':
-        return <span className="badge-pending">待確認</span>;
+        return <span className="badge-pending">{t('awaitingConfirmation')}</span>;
       case 'payment_confirmed':
-        return <span className="badge-confirmed">已確認付款</span>;
+        return <span className="badge-confirmed">{t('paymentConfirmed')}</span>;
       case 'completed':
-        return <span className="badge-completed">已完成</span>;
+        return <span className="badge-completed">{t('orderCompleted')}</span>;
       case 'refunded':
-        return <span className="badge-refunded">已退款</span>;
+        return <span className="badge-refunded">{t('refunded')}</span>;
       case 'cancelled':
-        return <span className="badge-refunded">已取消</span>;
+        return <span className="badge-refunded">{t('cancelled')}</span>;
       default:
         return null;
     }
@@ -176,14 +193,15 @@ export default function BuyerDashboard() {
   const getStatusIcon = (status: OrderStatus) => {
     switch (status) {
       case 'pending_payment':
+        return <Clock className="w-4 h-4 text-yellow-400" />;
       case 'awaiting_confirmation':
-        return <Clock className="w-5 h-5 text-yellow-400" />;
+        return <Clock className="w-4 h-4 text-yellow-400" />;
       case 'payment_confirmed':
+        return <CheckCircle className="w-4 h-4 text-green-400" />;
       case 'completed':
-        return <CheckCircle className="w-5 h-5 text-green-400" />;
+        return <CheckCircle className="w-4 h-4 text-green-400" />;
       case 'refunded':
-      case 'cancelled':
-        return <XCircle className="w-5 h-5 text-red-400" />;
+        return <XCircle className="w-4 h-4 text-red-400" />;
       default:
         return null;
     }
@@ -203,33 +221,33 @@ export default function BuyerDashboard() {
       
       <main className="container mx-auto px-4 pt-24 pb-12">
         <div className="mb-8">
-          <h1 className="text-3xl font-display font-bold mb-2">Buyer Dashboard</h1>
+          <h1 className="text-3xl font-display font-bold mb-2">{t('buyer')} {t('dashboard')}</h1>
           <p className="text-muted-foreground">Manage your purchases and track orders</p>
         </div>
 
         {/* Contact Info Section */}
         <div className="glass-card rounded-2xl p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
+          <h2 className="text-xl font-display font-semibold mb-4">Contact Information</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="buyer_phone">Phone Number</Label>
+              <Label htmlFor="phone">{t('phone')}</Label>
               <Input
-                id="buyer_phone"
+                id="phone"
                 value={contactInfo.phone}
                 onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
-                placeholder="+852 XXXX XXXX"
                 className="input-dark"
+                placeholder="Enter your phone number"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="buyer_email">Email</Label>
+              <Label htmlFor="email">{t('email')}</Label>
               <Input
-                id="buyer_email"
+                id="email"
                 type="email"
                 value={contactInfo.email}
                 onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
-                placeholder="your@email.com"
                 className="input-dark"
+                placeholder="Enter your email"
               />
             </div>
           </div>
@@ -239,41 +257,37 @@ export default function BuyerDashboard() {
         </div>
 
         {/* Browse CTA */}
-        <div className="glass-card rounded-2xl p-6 mb-8 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold">Looking for accounts?</h3>
-            <p className="text-muted-foreground">Browse our marketplace to find verified Instagram accounts.</p>
-          </div>
+        <div className="glass-card rounded-2xl p-6 mb-8 text-center">
+          <ShoppingBag className="w-12 h-12 text-primary mx-auto mb-4" />
+          <h2 className="text-xl font-display font-semibold mb-2">Browse Marketplace</h2>
+          <p className="text-muted-foreground mb-4">Find your next Instagram account</p>
           <Link to="/">
             <Button className="btn-gold">
               <ExternalLink className="w-4 h-4 mr-2" />
-              Browse Marketplace
+              View Listings
             </Button>
           </Link>
         </div>
 
         {/* Orders */}
-        <h2 className="text-2xl font-display font-bold mb-6">Your Orders</h2>
-        
-        {fetchLoading ? (
-          <div className="flex justify-center py-12">
-            <RefreshCw className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : orders.length === 0 ? (
-          <div className="glass-card rounded-2xl p-12 text-center">
-            <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No Orders Yet</h3>
-            <p className="text-muted-foreground mb-6">Browse the marketplace to purchase your first account.</p>
-            <Link to="/">
-              <Button className="btn-gold">Browse Accounts</Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {orders.map((order) => (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-display font-semibold">{t('orders')}</h2>
+          
+          {fetchLoading ? (
+            <div className="flex justify-center py-12">
+              <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="glass-card rounded-2xl p-12 text-center">
+              <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold">{t('noOrdersYet')}</h3>
+              <p className="text-muted-foreground">Start browsing to find your perfect account</p>
+            </div>
+          ) : (
+            orders.map((order) => (
               <div key={order.id} className="glass-card rounded-2xl p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-gold-dark p-[2px]">
                       <div className="w-full h-full rounded-full bg-card overflow-hidden flex items-center justify-center">
                         {order.ig_accounts?.ig_avatar_url ? (
@@ -285,70 +299,73 @@ export default function BuyerDashboard() {
                         )}
                       </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold">@{order.ig_accounts?.ig_username || 'Unknown'}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Order placed {new Date(order.created_at).toLocaleDateString()}
-                      </p>
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <h3 className="font-semibold text-lg">@{order.ig_accounts?.ig_username || 'Unknown'}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(order.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        {getStatusBadge(order.status)}
+                        <p className="text-xl font-display font-bold text-primary mt-1">
+                          HKD {order.listing_price.toLocaleString()}
+                        </p>
+                      </div>
                     </div>
+                    
+                    <div className="flex items-center gap-2 mt-3">
+                      {getStatusIcon(order.status)}
+                      <span className="text-sm text-muted-foreground">
+                        {order.status === 'pending_payment' && t('pleaseCompletePayment')}
+                        {order.status === 'awaiting_confirmation' && t('waitingForAdminConfirmation')}
+                        {order.status === 'payment_confirmed' && t('paymentConfirmedContactSeller')}
+                        {order.status === 'completed' && t('transactionCompleted')}
+                        {order.status === 'refunded' && t('paymentRefunded')}
+                      </span>
+                    </div>
+                    
+                    {order.status === 'pending_payment' && (
+                      <Button
+                        onClick={() => setSelectedOrder(order)}
+                        className="btn-gold mt-3"
+                      >
+                        {t('viewPaymentInfo')}
+                      </Button>
+                    )}
+                    
+                    {order.status === 'payment_confirmed' && (
+                      <Button
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setShowSellerInfo(true);
+                        }}
+                        className="btn-gold mt-3"
+                      >
+                        {t('viewSellerContact')}
+                      </Button>
+                    )}
                   </div>
-                  <div className="text-right">
-                    {getStatusBadge(order.status)}
-                    <p className="text-xl font-display font-bold text-primary mt-2">
-                      HKD {order.listing_price.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(order.status)}
-                    <span className="text-sm text-muted-foreground">
-                      {order.status === 'pending_payment' && '請完成付款'}
-                      {order.status === 'awaiting_confirmation' && '等待管理員確認付款'}
-                      {order.status === 'payment_confirmed' && '付款已確認，可查看賣家聯絡資料'}
-                      {order.status === 'completed' && '交易已完成'}
-                      {order.status === 'refunded' && '已退款'}
-                    </span>
-                  </div>
-                  
-                  {order.status === 'pending_payment' && (
-                    <Button
-                      onClick={() => setSelectedOrder(order)}
-                      className="btn-gold"
-                    >
-                      查看付款資料
-                    </Button>
-                  )}
-                  
-                  {order.status === 'payment_confirmed' && (
-                    <Button
-                      onClick={() => {
-                        setSelectedOrder(order);
-                        setShowSellerInfo(true);
-                      }}
-                      className="btn-gold"
-                    >
-                      查看賣家聯絡資料
-                    </Button>
-                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </main>
 
-      {/* Payment Info Dialog */}
+      {/* Payment Info Dialog - Uses Platform Settings */}
       <Dialog open={!!selectedOrder && !showSellerInfo} onOpenChange={(open) => !open && setSelectedOrder(null)}>
         <DialogContent className="bg-card border-border max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">Payment Instructions</DialogTitle>
+            <DialogTitle className="font-display text-2xl">{t('paymentInstructions')}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-6 mt-4">
             <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-              <p className="text-sm text-muted-foreground mb-1">Amount to Pay</p>
+              <p className="text-sm text-muted-foreground mb-1">{t('amountToPay')}</p>
               <p className="text-3xl font-display font-bold text-primary">
                 HKD {selectedOrder?.listing_price.toLocaleString()}
               </p>
@@ -358,26 +375,36 @@ export default function BuyerDashboard() {
               <div className="flex items-start gap-3">
                 <CreditCard className="w-5 h-5 text-primary mt-0.5" />
                 <div>
-                  <p className="font-semibold">FPS Number</p>
-                  <p className="text-muted-foreground">87925469</p>
+                  <p className="font-semibold">{t('fpsNumber')}</p>
+                  <p className="text-muted-foreground">{platformSettings.fpsNumber}</p>
                 </div>
               </div>
               
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 text-primary mt-0.5" />
                 <div>
-                  <p className="font-semibold">Email</p>
-                  <p className="text-muted-foreground">boyman131418@gmail.com</p>
+                  <p className="font-semibold">{t('email')}</p>
+                  <p className="text-muted-foreground">{platformSettings.paymentEmail}</p>
                 </div>
               </div>
+
+              {platformSettings.paymentMethods && (
+                <div className="flex items-start gap-3">
+                  <CreditCard className="w-5 h-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-semibold">{t('paymentMethods')}</p>
+                    <p className="text-muted-foreground">{platformSettings.paymentMethods}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="p-4 rounded-xl bg-muted/50 border border-border">
-              <p className="text-sm font-medium mb-2">After payment:</p>
+              <p className="text-sm font-medium mb-2">{t('afterPayment')}</p>
               <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                <li>Take a screenshot of the payment</li>
-                <li>Email the screenshot to boyman131418@gmail.com</li>
-                <li>Wait for admin confirmation (within 24 hours)</li>
+                <li>{t('step1Screenshot')}</li>
+                <li>{t('step2Email')} {platformSettings.paymentEmail}</li>
+                <li>{t('step3Wait')}</li>
               </ol>
             </div>
 
@@ -398,7 +425,7 @@ export default function BuyerDashboard() {
               }}
               className="w-full btn-gold"
             >
-              I've Made the Payment
+              {t('iveMadePayment')}
             </Button>
           </div>
         </DialogContent>
@@ -408,12 +435,12 @@ export default function BuyerDashboard() {
       <Dialog open={showSellerInfo} onOpenChange={(open) => { if (!open) { setShowSellerInfo(false); setSelectedOrder(null); } }}>
         <DialogContent className="bg-card border-border max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">Seller Contact Information</DialogTitle>
+            <DialogTitle className="font-display text-2xl">{t('sellerContactInfo')}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-6 mt-4">
             <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
-              <p className="text-sm text-green-400 font-medium">✓ Payment Confirmed</p>
+              <p className="text-sm text-green-400 font-medium">✓ {t('paymentConfirmed')}</p>
               <p className="text-xs text-muted-foreground mt-1">
                 Contact the seller to complete the account transfer
               </p>
@@ -424,7 +451,7 @@ export default function BuyerDashboard() {
                 <div className="flex items-start gap-3">
                   <Phone className="w-5 h-5 text-primary mt-0.5" />
                   <div>
-                    <p className="font-semibold">Phone</p>
+                    <p className="font-semibold">{t('phone')}</p>
                     <p className="text-muted-foreground">{selectedOrder.ig_accounts.contact_phone}</p>
                   </div>
                 </div>
@@ -434,7 +461,7 @@ export default function BuyerDashboard() {
                 <div className="flex items-start gap-3">
                   <Mail className="w-5 h-5 text-primary mt-0.5" />
                   <div>
-                    <p className="font-semibold">Email</p>
+                    <p className="font-semibold">{t('email')}</p>
                     <p className="text-muted-foreground">{selectedOrder.ig_accounts.contact_email}</p>
                   </div>
                 </div>
@@ -469,7 +496,7 @@ export default function BuyerDashboard() {
               ) : (
                 <CheckCircle className="w-4 h-4 mr-2" />
               )}
-              Confirm Transaction Complete
+              {t('confirmTransactionComplete')}
             </Button>
           </div>
         </DialogContent>
