@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { getProxiedImageUrl } from '@/lib/imageProxy';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -424,7 +425,7 @@ export default function SellerDashboard() {
                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-gold-dark p-[2px]">
                       <div className="w-full h-full rounded-full bg-card overflow-hidden flex items-center justify-center">
                         {account.ig_avatar_url ? (
-                          <img src={account.ig_avatar_url} alt={account.ig_username} className="w-full h-full object-cover" />
+                          <img src={getProxiedImageUrl(account.ig_avatar_url) || ''} alt={account.ig_username} className="w-full h-full object-cover" />
                         ) : (
                           <span className="text-xl font-bold text-muted-foreground">
                             {account.ig_username[0]?.toUpperCase()}

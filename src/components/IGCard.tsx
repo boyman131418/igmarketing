@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Users, Mail } from 'lucide-react';
+import { getProxiedImageUrl } from '@/lib/imageProxy';
 
 interface IGCardProps {
   id: string;
@@ -30,6 +31,8 @@ export default function IGCard({
     return count.toString();
   };
 
+  const proxiedAvatarUrl = getProxiedImageUrl(avatarUrl);
+
   return (
     <Link
       to={`/account/${id}`}
@@ -39,9 +42,9 @@ export default function IGCard({
         <div className="relative">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-gold-dark p-[2px]">
             <div className="w-full h-full rounded-full bg-card overflow-hidden">
-              {avatarUrl ? (
+              {proxiedAvatarUrl ? (
                 <img
-                  src={avatarUrl}
+                  src={proxiedAvatarUrl}
                   alt={username}
                   className="w-full h-full object-cover"
                 />
