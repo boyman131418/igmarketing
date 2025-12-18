@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,7 +18,8 @@ import {
   XCircle,
   Clock,
   DollarSign,
-  AlertTriangle
+  Settings,
+  Save
 } from 'lucide-react';
 import {
   Dialog,
@@ -71,6 +74,7 @@ const ADMIN_EMAIL = 'boyman131418@gmail.com';
 
 export default function AdminPanel() {
   const { user, profile, loading } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -80,6 +84,14 @@ export default function AdminPanel() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  
+  // Payment settings state
+  const [paymentSettings, setPaymentSettings] = useState({
+    fpsNumber: '',
+    paymentEmail: '',
+    paymentMethods: '',
+  });
+  const [savingSettings, setSavingSettings] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -87,12 +99,10 @@ export default function AdminPanel() {
       return;
     }
     if (!loading && profile) {
-      // Check if user is admin (has admin role or is the admin email)
       if (profile.role !== 'admin' && profile.email !== ADMIN_EMAIL) {
         navigate('/');
         return;
       }
-      // Auto-set admin role if email matches
       if (profile.email === ADMIN_EMAIL && profile.role !== 'admin') {
         setAdminRole();
       }
@@ -110,13 +120,51 @@ export default function AdminPanel() {
   useEffect(() => {
     if (user && (profile?.role === 'admin' || profile?.email === ADMIN_EMAIL)) {
       fetchData();
+      fetchPaymentSettings();
     }
   }, [user, profile]);
+
+  const fetchPaymentSettings = async () => {
+    const { data } = await supabase
+      .from('platform_settings')
+      .select('key, value');
+    
+    if (data) {
+      const settings: Record<string, string> = {};
+      data.forEach(item => {
+        settings[item.key] = item.value || '';
+      });
+      setPaymentSettings({
+        fpsNumber: settings['payment_fps_number'] || '',
+        paymentEmail: settings['payment_email'] || '',
+        paymentMethods: settings['payment_methods'] || '',
+      });
+    }
+  };
+
+  const savePaymentSettings = async () => {
+    setSavingSettings(true);
+    
+    const updates = [
+      { key: 'payment_fps_number', value: paymentSettings.fpsNumber },
+      { key: 'payment_email', value: paymentSettings.paymentEmail },
+      { key: 'payment_methods', value: paymentSettings.paymentMethods },
+    ];
+
+    for (const update of updates) {
+      await supabase
+        .from('platform_settings')
+        .update({ value: update.value, updated_at: new Date().toISOString(), updated_by: user?.id })
+        .eq('key', update.key);
+    }
+
+    toast({ title: t('settingsSaved') });
+    setSavingSettings(false);
+  };
 
   const fetchData = async () => {
     setFetchLoading(true);
     
-    // Fetch orders
     const { data: ordersData } = await supabase
       .from('orders')
       .select(`
@@ -137,7 +185,6 @@ export default function AdminPanel() {
       setOrders(ordersData as Order[]);
     }
 
-    // Fetch users
     const { data: usersData } = await supabase
       .from('profiles')
       .select('*')
@@ -147,7 +194,6 @@ export default function AdminPanel() {
       setUsers(usersData as Profile[]);
     }
 
-    // Fetch accounts
     const { data: accountsData } = await supabase
       .from('ig_accounts')
       .select(`
@@ -180,7 +226,7 @@ export default function AdminPanel() {
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Payment Confirmed', description: 'Buyer can now access seller contact info.' });
+      toast({ title: t('paymentConfirmed'), description: t('paymentConfirmedMsg') });
       fetchData();
       setSelectedOrder(null);
       setAdminNotes('');
@@ -189,7 +235,7 @@ export default function AdminPanel() {
   };
 
   const refundOrder = async (order: Order) => {
-    if (!confirm('Are you sure you want to refund this order?')) return;
+    if (!confirm(t('confirmRefund'))) return;
     
     setActionLoading(true);
     const { error } = await supabase
@@ -204,7 +250,7 @@ export default function AdminPanel() {
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Order Refunded', description: 'The order has been marked as refunded.' });
+      toast({ title: t('refunded'), description: t('orderRefundedMsg') });
       fetchData();
       setSelectedOrder(null);
       setAdminNotes('');
@@ -215,17 +261,17 @@ export default function AdminPanel() {
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
       case 'pending_payment':
-        return <span className="badge-pending">Pending Payment</span>;
+        return <span className="badge-pending">{t('pendingPayment')}</span>;
       case 'awaiting_confirmation':
-        return <span className="badge-pending">Awaiting Confirmation</span>;
+        return <span className="badge-pending">{t('awaitingConfirmation')}</span>;
       case 'payment_confirmed':
-        return <span className="badge-confirmed">Payment Confirmed</span>;
+        return <span className="badge-confirmed">{t('paymentConfirmed')}</span>;
       case 'completed':
-        return <span className="badge-completed">Completed</span>;
+        return <span className="badge-completed">{t('orderCompleted')}</span>;
       case 'refunded':
-        return <span className="badge-refunded">Refunded</span>;
+        return <span className="badge-refunded">{t('refunded')}</span>;
       case 'cancelled':
-        return <span className="badge-refunded">Cancelled</span>;
+        return <span className="badge-refunded">{t('cancelled')}</span>;
     }
   };
 
@@ -252,8 +298,8 @@ export default function AdminPanel() {
       
       <main className="container mx-auto px-4 pt-24 pb-12">
         <div className="mb-8">
-          <h1 className="text-3xl font-display font-bold mb-2">Admin Panel</h1>
-          <p className="text-muted-foreground">Manage orders, users, and platform settings</p>
+          <h1 className="text-3xl font-display font-bold mb-2">{t('adminPanel')}</h1>
+          <p className="text-muted-foreground">{t('manageOrdersUsersSettings')}</p>
         </div>
 
         {/* Stats */}
@@ -261,28 +307,28 @@ export default function AdminPanel() {
           <div className="glass-card rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <ShoppingCart className="w-5 h-5 text-primary" />
-              <span className="text-muted-foreground text-sm">Total Orders</span>
+              <span className="text-muted-foreground text-sm">{t('totalOrders')}</span>
             </div>
             <p className="text-3xl font-display font-bold">{stats.totalOrders}</p>
           </div>
           <div className="glass-card rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <Clock className="w-5 h-5 text-yellow-400" />
-              <span className="text-muted-foreground text-sm">Pending</span>
+              <span className="text-muted-foreground text-sm">{t('pending')}</span>
             </div>
             <p className="text-3xl font-display font-bold">{stats.pendingConfirmation}</p>
           </div>
           <div className="glass-card rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <CheckCircle className="w-5 h-5 text-green-400" />
-              <span className="text-muted-foreground text-sm">Completed</span>
+              <span className="text-muted-foreground text-sm">{t('completed')}</span>
             </div>
             <p className="text-3xl font-display font-bold">{stats.completedOrders}</p>
           </div>
           <div className="glass-card rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <DollarSign className="w-5 h-5 text-primary" />
-              <span className="text-muted-foreground text-sm">Revenue</span>
+              <span className="text-muted-foreground text-sm">{t('revenue')}</span>
             </div>
             <p className="text-3xl font-display font-bold">HKD {stats.totalRevenue.toLocaleString()}</p>
           </div>
@@ -292,15 +338,19 @@ export default function AdminPanel() {
           <TabsList className="bg-card border border-border">
             <TabsTrigger value="orders" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <ShoppingCart className="w-4 h-4 mr-2" />
-              Orders
+              {t('orders')}
             </TabsTrigger>
             <TabsTrigger value="users" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Users className="w-4 h-4 mr-2" />
-              Users
+              {t('users')}
             </TabsTrigger>
             <TabsTrigger value="accounts" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Instagram className="w-4 h-4 mr-2" />
-              Accounts
+              {t('accounts')}
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Settings className="w-4 h-4 mr-2" />
+              {t('settings')}
             </TabsTrigger>
           </TabsList>
 
@@ -308,7 +358,7 @@ export default function AdminPanel() {
             {orders.length === 0 ? (
               <div className="glass-card rounded-2xl p-12 text-center">
                 <ShoppingCart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-semibold">No Orders Yet</h3>
+                <h3 className="text-xl font-semibold">{t('noOrdersYet')}</h3>
               </div>
             ) : (
               orders.map((order) => (
@@ -340,12 +390,12 @@ export default function AdminPanel() {
 
                   <div className="grid md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border/50">
                     <div>
-                      <p className="text-sm text-muted-foreground">Buyer</p>
+                      <p className="text-sm text-muted-foreground">{t('buyer')}</p>
                       <p className="font-medium">{order.buyer?.email || 'N/A'}</p>
                       <p className="text-sm text-muted-foreground">{order.buyer_phone}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Seller</p>
+                      <p className="text-sm text-muted-foreground">{t('seller')}</p>
                       <p className="font-medium">{order.seller?.email || 'N/A'}</p>
                     </div>
                   </div>
@@ -358,7 +408,7 @@ export default function AdminPanel() {
                           className="btn-gold"
                         >
                           <CheckCircle className="w-4 h-4 mr-2" />
-                          Confirm Payment
+                          {t('confirmPayment')}
                         </Button>
                         <Button
                           variant="outline"
@@ -369,7 +419,7 @@ export default function AdminPanel() {
                           className="text-destructive hover:bg-destructive/10"
                         >
                           <XCircle className="w-4 h-4 mr-2" />
-                          Refund
+                          {t('refund')}
                         </Button>
                       </>
                     )}
@@ -378,7 +428,7 @@ export default function AdminPanel() {
                         variant="outline"
                         onClick={() => setSelectedOrder(order)}
                       >
-                        View Details
+                        {t('viewDetails')}
                       </Button>
                     )}
                   </div>
@@ -393,10 +443,10 @@ export default function AdminPanel() {
                 <table className="w-full">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-left p-4 font-medium">Email</th>
-                      <th className="text-left p-4 font-medium">Phone</th>
-                      <th className="text-left p-4 font-medium">Role</th>
-                      <th className="text-left p-4 font-medium">Joined</th>
+                      <th className="text-left p-4 font-medium">{t('email')}</th>
+                      <th className="text-left p-4 font-medium">{t('phone')}</th>
+                      <th className="text-left p-4 font-medium">{t('role')}</th>
+                      <th className="text-left p-4 font-medium">{t('joined')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -410,7 +460,7 @@ export default function AdminPanel() {
                             user.role === 'seller' ? 'bg-blue-500/20 text-blue-400' :
                             'bg-green-500/20 text-green-400'
                           }`}>
-                            {user.role || 'None'}
+                            {user.role ? t(user.role) : t('none')}
                           </span>
                         </td>
                         <td className="p-4 text-muted-foreground">
@@ -430,10 +480,10 @@ export default function AdminPanel() {
                 <table className="w-full">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-left p-4 font-medium">Username</th>
-                      <th className="text-left p-4 font-medium">Followers</th>
-                      <th className="text-left p-4 font-medium">Seller</th>
-                      <th className="text-left p-4 font-medium">Status</th>
+                      <th className="text-left p-4 font-medium">{t('username')}</th>
+                      <th className="text-left p-4 font-medium">{t('followers')}</th>
+                      <th className="text-left p-4 font-medium">{t('seller')}</th>
+                      <th className="text-left p-4 font-medium">{t('status')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -444,13 +494,67 @@ export default function AdminPanel() {
                         <td className="p-4 text-muted-foreground">{account.seller?.email || 'N/A'}</td>
                         <td className="p-4">
                           <span className={`badge-status ${account.is_published ? 'bg-green-500/20 text-green-400' : 'bg-muted text-muted-foreground'}`}>
-                            {account.is_published ? 'Published' : 'Draft'}
+                            {account.is_published ? t('published') : t('draft')}
                           </span>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-6">
+            <div className="glass-card rounded-2xl p-6">
+              <h3 className="text-xl font-display font-bold mb-2">{t('paymentSettings')}</h3>
+              <p className="text-muted-foreground mb-6">{t('paymentSettingsDesc')}</p>
+              
+              <div className="space-y-4 max-w-md">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('fpsNumber')}</label>
+                  <Input
+                    value={paymentSettings.fpsNumber}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, fpsNumber: e.target.value }))}
+                    placeholder="87925469"
+                    className="input-dark"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('paymentEmail')}</label>
+                  <Input
+                    type="email"
+                    value={paymentSettings.paymentEmail}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, paymentEmail: e.target.value }))}
+                    placeholder="your@email.com"
+                    className="input-dark"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('paymentMethods')}</label>
+                  <Textarea
+                    value={paymentSettings.paymentMethods}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, paymentMethods: e.target.value }))}
+                    placeholder="FPS, PayMe, Bank Transfer..."
+                    className="input-dark"
+                    rows={3}
+                  />
+                </div>
+                
+                <Button 
+                  onClick={savePaymentSettings} 
+                  className="btn-gold"
+                  disabled={savingSettings}
+                >
+                  {savingSettings ? (
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  {t('saveSettings')}
+                </Button>
               </div>
             </div>
           </TabsContent>
@@ -461,39 +565,39 @@ export default function AdminPanel() {
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
         <DialogContent className="bg-card border-border max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">Order Details</DialogTitle>
+            <DialogTitle className="font-display text-2xl">{t('orderDetails')}</DialogTitle>
           </DialogHeader>
           
           {selectedOrder && (
             <div className="space-y-6 mt-4">
               <div className="p-4 rounded-xl bg-muted/50">
                 <div className="flex justify-between mb-2">
-                  <span className="text-muted-foreground">Account</span>
+                  <span className="text-muted-foreground">{t('accounts')}</span>
                   <span className="font-medium">@{selectedOrder.ig_accounts?.ig_username}</span>
                 </div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-muted-foreground">Price</span>
+                  <span className="text-muted-foreground">{t('price')}</span>
                   <span className="font-medium">HKD {selectedOrder.listing_price.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-muted-foreground">Platform Fee (10%)</span>
+                  <span className="text-muted-foreground">{t('platformFee')}</span>
                   <span className="font-medium text-primary">HKD {selectedOrder.platform_fee.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Seller Payout</span>
+                  <span className="text-muted-foreground">{t('sellerPayout')}</span>
                   <span className="font-medium">HKD {selectedOrder.seller_payout.toLocaleString()}</span>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Buyer Contact</p>
+                <p className="text-sm text-muted-foreground">{t('buyerContact')}</p>
                 <p className="font-medium">{selectedOrder.buyer_email}</p>
                 <p className="text-sm text-muted-foreground">{selectedOrder.buyer_phone}</p>
               </div>
 
               {selectedOrder.ig_accounts && (
                 <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Seller Contact</p>
+                  <p className="text-sm text-muted-foreground">{t('sellerContact')}</p>
                   <p className="font-medium">{selectedOrder.ig_accounts.contact_email}</p>
                   <p className="text-sm text-muted-foreground">{selectedOrder.ig_accounts.contact_phone}</p>
                   {selectedOrder.ig_accounts.payment_details && (
@@ -505,11 +609,11 @@ export default function AdminPanel() {
               {selectedOrder.status === 'awaiting_confirmation' && (
                 <>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Admin Notes</label>
+                    <label className="text-sm font-medium">{t('adminNotes')}</label>
                     <Textarea
                       value={adminNotes}
                       onChange={(e) => setAdminNotes(e.target.value)}
-                      placeholder="Add notes about this order..."
+                      placeholder={t('addNotesPlaceholder')}
                       className="input-dark"
                     />
                   </div>
@@ -521,7 +625,7 @@ export default function AdminPanel() {
                       disabled={actionLoading}
                     >
                       {actionLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
-                      Confirm Payment
+                      {t('confirmPayment')}
                     </Button>
                     <Button
                       variant="outline"
@@ -539,14 +643,14 @@ export default function AdminPanel() {
                 <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
                   <div className="flex items-center gap-2 text-green-400">
                     <CheckCircle className="w-5 h-5" />
-                    <span className="font-medium">Transaction Completed</span>
+                    <span className="font-medium">{t('orderCompleted')}</span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Completed on {selectedOrder.completed_at ? new Date(selectedOrder.completed_at).toLocaleDateString() : 'N/A'}
+                    {t('transactionCompletedOn')} {selectedOrder.completed_at ? new Date(selectedOrder.completed_at).toLocaleDateString() : 'N/A'}
                   </p>
                   <div className="mt-3 p-3 bg-primary/10 rounded-lg">
                     <p className="text-sm font-medium text-primary">
-                      Seller payout due: HKD {selectedOrder.seller_payout.toLocaleString()}
+                      {t('sellerPayoutDue')}: HKD {selectedOrder.seller_payout.toLocaleString()}
                     </p>
                   </div>
                 </div>
