@@ -113,41 +113,39 @@ export default function Header() {
                     </DropdownMenuItem>
                   )}
 
-                  {/* Role Switching - Only for Admin */}
-                  {isAdmin && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
-                          <UserCog className="w-4 h-4 mr-2" />
-                          {t('switchRole')}
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="bg-card border-border">
-                          <DropdownMenuItem 
-                            onClick={() => handleRoleSwitch('buyer')}
-                            className={profile?.role === 'buyer' ? 'bg-primary/10' : ''}
-                          >
-                            <ShoppingCart className="w-4 h-4 mr-2" />
-                            {t('buyer')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleRoleSwitch('seller')}
-                            className={profile?.role === 'seller' ? 'bg-primary/10' : ''}
-                          >
-                            <Store className="w-4 h-4 mr-2" />
-                            {t('seller')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleRoleSwitch('admin')}
-                            className={profile?.role === 'admin' ? 'bg-primary/10' : ''}
-                          >
-                            <Shield className="w-4 h-4 mr-2" />
-                            {t('admin')}
-                          </DropdownMenuItem>
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-                    </>
-                  )}
+                  {/* Role Switching - Available for all users */}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <UserCog className="w-4 h-4 mr-2" />
+                      {t('switchRole')}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="bg-card border-border">
+                      <DropdownMenuItem 
+                        onClick={() => handleRoleSwitch('buyer')}
+                        className={profile?.role === 'buyer' ? 'bg-primary/10' : ''}
+                      >
+                        <ShoppingCart className="w-4 h-4 mr-2" />
+                        {t('buyer')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleRoleSwitch('seller')}
+                        className={profile?.role === 'seller' ? 'bg-primary/10' : ''}
+                      >
+                        <Store className="w-4 h-4 mr-2" />
+                        {t('seller')}
+                      </DropdownMenuItem>
+                      {isAdmin && (
+                        <DropdownMenuItem 
+                          onClick={() => handleRoleSwitch('admin')}
+                          className={profile?.role === 'admin' ? 'bg-primary/10' : ''}
+                        >
+                          <Shield className="w-4 h-4 mr-2" />
+                          {t('admin')}
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
                   
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
