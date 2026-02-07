@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Mail } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { getProxiedImageUrl } from '@/lib/imageProxy';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -10,7 +10,6 @@ interface IGCardProps {
   avatarUrl: string | null;
   followerCount: number;
   price: number;
-  maskedEmail: string;
   index?: number;
 }
 
@@ -20,7 +19,6 @@ export default function IGCard({
   avatarUrl,
   followerCount,
   price,
-  maskedEmail,
   index = 0,
 }: IGCardProps) {
   const { t } = useLanguage();
@@ -71,10 +69,6 @@ export default function IGCard({
           <div className="flex items-center gap-1 text-muted-foreground text-sm mt-1">
             <Users className="w-4 h-4" />
             <span>{formatFollowers(followerCount)} {t('followers')}</span>
-          </div>
-          <div className="flex items-center gap-1 text-muted-foreground text-sm mt-1">
-            <Mail className="w-4 h-4" />
-            <span className="truncate">{maskedEmail}</span>
           </div>
         </div>
       </div>
