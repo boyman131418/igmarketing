@@ -186,7 +186,6 @@ export default function Index() {
                   avatarUrl={account.ig_avatar_url}
                   followerCount={account.follower_count}
                   price={calculatePrice(account)}
-                  maskedEmail={maskEmail(account.contact_email)}
                   index={index}
                 />
               ))}
