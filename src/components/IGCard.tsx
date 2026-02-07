@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Mail } from 'lucide-react';
 import { getProxiedImageUrl } from '@/lib/imageProxy';
@@ -23,6 +24,7 @@ export default function IGCard({
   index = 0,
 }: IGCardProps) {
   const { t } = useLanguage();
+  const [imageError, setImageError] = useState(false);
   
   const formatFollowers = (count: number) => {
     if (count >= 1000000) {
@@ -35,6 +37,7 @@ export default function IGCard({
   };
 
   const proxiedAvatarUrl = getProxiedImageUrl(avatarUrl);
+  const showFallback = !proxiedAvatarUrl || imageError;
 
   return (
     <Link
@@ -45,18 +48,19 @@ export default function IGCard({
         <div className="relative">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-gold-dark p-[2px]">
             <div className="w-full h-full rounded-full bg-card overflow-hidden">
-              {proxiedAvatarUrl ? (
-                <img
-                  src={proxiedAvatarUrl}
-                  alt={username}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
+              {showFallback ? (
                 <div className="w-full h-full flex items-center justify-center bg-muted">
                   <span className="text-2xl font-bold text-muted-foreground">
                     {username[0]?.toUpperCase()}
                   </span>
                 </div>
+              ) : (
+                <img
+                  src={proxiedAvatarUrl}
+                  alt={username}
+                  className="w-full h-full object-cover"
+                  onError={() => setImageError(true)}
+                />
               )}
             </div>
           </div>
