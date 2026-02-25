@@ -31,6 +31,13 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_SUPABASE_PROJECT_ID: "czkeewhgomgpivciwkcm"
+          VITE_SUPABASE_PUBLISHABLE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6a2Vld2hnb21ncGl2Y2l3a2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwMjE0MjEsImV4cCI6MjA4MTU5NzQyMX0.hQIGEzJUHj6zvbBFKfZ3SUplwVWTJz5a8GIdbE_oBaE"
+          VITE_SUPABASE_URL: "https://czkeewhgomgpivciwkcm.supabase.co"
+
+      - name: Copy index.html to 404.html for SPA routing
+        run: cp dist/index.html dist/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
