@@ -62,23 +62,23 @@ export default function Index() {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-32 pb-20 px-4">
+      <section className="relative overflow-hidden pt-24 pb-12 sm:pt-32 sm:pb-20 px-4">
         <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent" />
         <div className="container mx-auto relative z-10">
           <div className="text-center max-w-4xl mx-auto animate-fade-up">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8">
-              <Instagram className="w-4 h-4 text-primary" />
-              <span className="text-sm text-primary font-medium">{t('premiumIgMarketplace')}</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 sm:mb-8">
+              <Instagram className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+              <span className="text-xs sm:text-sm text-primary font-medium">{t('premiumIgMarketplace')}</span>
             </div>
-            <h1 className="text-5xl md:text-7xl font-display font-bold mb-6">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-display font-bold mb-4 sm:mb-6 leading-tight">
               <span className="text-foreground">{t('buyAndSell')}</span>
               <br />
               <span className="text-gradient-gold">{t('instagramAccounts')}</span>
             </h1>
-            <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+            <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-10 max-w-2xl mx-auto px-2">
               {t('heroDescription')}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
               {!user ? (
                 <Link to="/auth" className="btn-gold text-lg">
                   {t('startTradingNow')}
@@ -106,33 +106,33 @@ export default function Index() {
       </section>
 
       {/* Features */}
-      <section className="py-16 px-4 border-t border-border/50">
+      <section className="py-10 sm:py-16 px-4 border-t border-border/50">
         <div className="container mx-auto">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="glass-card rounded-2xl p-8 animate-fade-up stagger-1 opacity-0">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
-                <Shield className="w-6 h-6 text-primary" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
+            <div className="glass-card rounded-2xl p-5 sm:p-8 animate-fade-up stagger-1 opacity-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 sm:mb-6">
+                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">{t('secureEscrow')}</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">{t('secureEscrow')}</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 {t('secureEscrowDesc')}
               </p>
             </div>
-            <div className="glass-card rounded-2xl p-8 animate-fade-up stagger-2 opacity-0">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
-                <Zap className="w-6 h-6 text-primary" />
+            <div className="glass-card rounded-2xl p-5 sm:p-8 animate-fade-up stagger-2 opacity-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 sm:mb-6">
+                <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">{t('fastVerification')}</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">{t('fastVerification')}</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 {t('fastVerificationDesc')}
               </p>
             </div>
-            <div className="glass-card rounded-2xl p-8 animate-fade-up stagger-3 opacity-0">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
-                <Users className="w-6 h-6 text-primary" />
+            <div className="glass-card rounded-2xl p-5 sm:p-8 animate-fade-up stagger-3 opacity-0 sm:col-span-2 md:col-span-1">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 sm:mb-6">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">{t('verifiedAccounts')}</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">{t('verifiedAccounts')}</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 {t('verifiedAccountsDesc')}
               </p>
             </div>
@@ -141,12 +141,12 @@ export default function Index() {
       </section>
 
       {/* Listings */}
-      <section className="py-16 px-4">
+      <section className="py-10 sm:py-16 px-4">
         <div className="container mx-auto">
-          <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center justify-between mb-6 sm:mb-10">
             <div>
-              <h2 className="text-3xl font-display font-bold mb-2">{t('availableAccounts')}</h2>
-              <p className="text-muted-foreground">{t('browseVerifiedAccounts')}</p>
+              <h2 className="text-2xl sm:text-3xl font-display font-bold mb-1 sm:mb-2">{t('availableAccounts')}</h2>
+              <p className="text-sm sm:text-base text-muted-foreground">{t('browseVerifiedAccounts')}</p>
             </div>
           </div>
 
@@ -195,9 +195,9 @@ export default function Index() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 border-t border-border/50">
+      <footer className="py-8 sm:py-12 px-4 border-t border-border/50">
         <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
             <div className="flex items-center gap-2">
               <Instagram className="w-6 h-6 text-primary" />
               <span className="font-display text-xl font-bold">IG Market</span>
