@@ -20,6 +20,41 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isGitHubPagesHost = window.location.hostname === 'boyman131418.github.io';
+  const bridgeAuthUrl = 'https://igmarketing.lovable.app/igmarketing/oauth-bridge';
+
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
+
+    if (!accessToken || !refreshToken) return;
+
+    let cancelled = false;
+
+    const applyBridgeSession = async () => {
+      setIsSubmitting(true);
+      const { error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+
+      if (cancelled) return;
+
+      if (error) {
+        toast.error(error.message);
+      }
+
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+      setIsSubmitting(false);
+    };
+
+    applyBridgeSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!loading && user) {
@@ -219,6 +254,13 @@ export default function Auth() {
               variant="outline"
               className="w-full h-12 font-medium rounded-xl"
               onClick={async () => {
+                if (isGitHubPagesHost) {
+                  const bridgeUrl = new URL(bridgeAuthUrl);
+                  bridgeUrl.searchParams.set('return_to', `${window.location.origin}${window.location.pathname}`);
+                  window.location.href = bridgeUrl.toString();
+                  return;
+                }
+
                 const { error } = await lovable.auth.signInWithOAuth("google", {
                   redirect_uri: window.location.origin,
                 });

@@ -12,6 +12,7 @@ import SellerDashboard from "./pages/SellerDashboard";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import AccountDetail from "./pages/AccountDetail";
+import OauthBridge from "./pages/OauthBridge";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/oauth-bridge" element={<OauthBridge />} />
               <Route path="/role-select" element={<RoleSelect />} />
               <Route path="/seller" element={<SellerDashboard />} />
               <Route path="/buyer" element={<BuyerDashboard />} />
