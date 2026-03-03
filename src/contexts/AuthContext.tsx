@@ -117,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const isAdmin = profile?.email === 'boyman131418@gmail.com' || profile?.role === 'admin';
+  const isAdmin = profile?.email === 'boyman131418@gmail.com' || profile?.email === 'iuleejieun516@hotmail.com' || profile?.role === 'admin';
 
   return (
     <AuthContext.Provider value={{
