@@ -21,7 +21,7 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isGitHubPagesHost = window.location.hostname === 'boyman131418.github.io';
-  const bridgeAuthUrl = 'https://id-preview--d140a7c0-0128-48a6-9419-61f4edce90a9.lovable.app/oauth-bridge';
+  const githubAuthReturnUrl = `${window.location.origin}${window.location.pathname}`;
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
@@ -255,9 +255,21 @@ export default function Auth() {
               className="w-full h-12 font-medium rounded-xl"
               onClick={async () => {
                 if (isGitHubPagesHost) {
-                  const bridgeUrl = new URL(bridgeAuthUrl);
-                  bridgeUrl.searchParams.set('return_to', `${window.location.origin}${window.location.pathname}`);
-                  window.location.href = bridgeUrl.toString();
+                  const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                      redirectTo: githubAuthReturnUrl,
+                    },
+                  });
+
+                  if (error) {
+                    toast.error(`Google 登入失敗：${error.message}`);
+                    return;
+                  }
+
+                  if (data?.url) {
+                    window.location.href = data.url;
+                  }
                   return;
                 }
 
