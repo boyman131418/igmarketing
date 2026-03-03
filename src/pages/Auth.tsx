@@ -22,6 +22,7 @@ export default function Auth() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isGitHubPagesHost = window.location.hostname === 'boyman131418.github.io';
   const googleRedirectUri = `${window.location.origin}${import.meta.env.BASE_URL}auth`;
+  const bridgeAuthUrl = 'https://id-preview--d140a7c0-0128-48a6-9419-61f4edce90a9.lovable.app/oauth-bridge';
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
@@ -254,11 +255,15 @@ export default function Auth() {
               variant="outline"
               className="w-full h-12 font-medium rounded-xl"
               onClick={async () => {
+                if (isGitHubPagesHost) {
+                  const bridgeUrl = new URL(bridgeAuthUrl);
+                  bridgeUrl.searchParams.set('return_to', googleRedirectUri);
+                  window.location.href = bridgeUrl.toString();
+                  return;
+                }
+
                 const { error } = await lovable.auth.signInWithOAuth("google", {
                   redirect_uri: googleRedirectUri,
-                  extraParams: isGitHubPagesHost
-                    ? { prompt: "select_account" }
-                    : undefined,
                 });
 
                 if (error) {
