@@ -21,7 +21,7 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isGitHubPagesHost = window.location.hostname === 'boyman131418.github.io';
-  const githubAuthReturnUrl = `${window.location.origin}${window.location.pathname}`;
+  const googleRedirectUri = `${window.location.origin}${import.meta.env.BASE_URL}auth`;
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
@@ -254,29 +254,16 @@ export default function Auth() {
               variant="outline"
               className="w-full h-12 font-medium rounded-xl"
               onClick={async () => {
-                if (isGitHubPagesHost) {
-                  const { data, error } = await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                      redirectTo: githubAuthReturnUrl,
-                    },
-                  });
-
-                  if (error) {
-                    toast.error(`Google 登入失敗：${error.message}`);
-                    return;
-                  }
-
-                  if (data?.url) {
-                    window.location.href = data.url;
-                  }
-                  return;
-                }
-
                 const { error } = await lovable.auth.signInWithOAuth("google", {
-                  redirect_uri: window.location.origin,
+                  redirect_uri: googleRedirectUri,
+                  extraParams: isGitHubPagesHost
+                    ? { prompt: "select_account" }
+                    : undefined,
                 });
-                if (error) toast.error(error.message);
+
+                if (error) {
+                  toast.error(`Google 登入失敗：${error.message}`);
+                }
               }}
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
