@@ -21,7 +21,7 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isGitHubPagesHost = window.location.hostname === 'boyman131418.github.io';
-  const bridgeAuthUrl = 'https://igmarketing.lovable.app/igmarketing/oauth-bridge';
+  const bridgeAuthUrl = 'https://id-preview--d140a7c0-0128-48a6-9419-61f4edce90a9.lovable.app/oauth-bridge';
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
